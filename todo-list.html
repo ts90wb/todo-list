@@ -1,0 +1,210 @@
+<!DOCTYPE html >
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width = device-width, initial-scale = 1.0, maximum-scale = 1.0, minimum-scale = 1.0, user-scalable = no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
+    <title> Document </title>
+    <style>
+         :clearfix {
+            display: block;
+            overflow: hidden;
+            clear: both;
+            visibility: hidden;
+            font-size: 0;
+            height: 0;
+            content: '';
+        }
+        
+        .navbar {
+            border-radius: 0;
+        }
+        
+        .container .panel {
+            padding: 0;
+        }
+        
+        .input-group {
+            margin-top: 10px;
+        }
+        
+        .input-group span.danger {
+            background: rgb(252, 89, 89);
+            color: #fff;
+        }
+        
+        .checkbox {
+            padding-left: 15px;
+        }
+        
+        .checkbox label {
+            margin-right: 10px;
+        }
+        
+        .list-group label {
+            font-weight: 400;
+            color: #999;
+            margin-bottom: 0;
+        }
+        
+        .list-group-item span {
+            margin-right: 15px;
+        }
+        
+        .list-group input {
+            margin-right: 10px;
+        }
+        
+        .panel-footer .undone {
+            margin-right: 15px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="app">
+        <nav class="navbar navbar-inverse">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">
+todoList
+                    </a>
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="row">
+                <div class="panel panel-default col-md-6 col-md-offset-3">
+                    <div class="panel-heading ">
+                        <h4 class="text-danger">亲,你有{{todos.length}}件事待办</h4>
+                        <ul class="nav nav-pills">
+                            <li role="presentation" class="active"><a href="#">待办事件</a></li>
+                            <li role="presentation"><a href="#">已完成</a></li>
+                            <li role="presentation"><a href="#">未完成</a></li>
+                        </ul>
+                        <div class="input-group">
+                            <input v-model="msg" @keyup.enter="addUpcoming" type="text" class="form-control" placeholder="请添加代办事" aria-describedby="basic-addon2">
+                            <span class="input-group-addon" :class="{danger:spanActived}" id="basic-addon2">{{tip}}</span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="checkbox">
+                            <label>
+                                      <input type="checkbox" v-model="checkAll">
+                                全选
+                                    </label>
+                            <label>
+                                            <input type="checkbox" v-model="reverseCheckP" @change="reverseCheck">
+                                      反选
+                                          </label>
+                        </div>
+                        <ul class="list-group clearfix">
+                            <li class="list-group-item" v-for="(todo,index) in todos" :key="index"><label><input type="checkbox" v-model="todo.isSelected">{{todo.title}}</label><button class="btn pull-right btn-danger btn-xs" @click="rmUpcoming(index)">✘</button><span class="pull-right">{{todo.time}}</span></li>
+
+                        </ul>
+                    </div>
+                    <div class="panel-footer clearfix">
+                        <button class="btn btn-success pull-right">加入已完成</button>
+                        <button class="btn btn-warning pull-right undone">加入未完成</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+<script src="node_modules/vue/dist/vue.js"></script>
+<script src="node_modules/axios/dist/axios.js"></script>
+<script>
+    let vm = new Vue({
+        el: '#app',
+        data: {
+            currentTime: new Date(),
+            reverseCheckP: false,
+            spanActived: false,
+            tip: '慢慢写,不着急',
+            msg: '',
+            todos: [{
+                    id: 0,
+                    isSelected: false,
+                    title: '买书',
+                    time: '1/14-23:23'
+                }, {
+                    id: 1,
+                    isSelected: false,
+                    title: '健身',
+                    time: '1/14-23:23'
+                }
+
+            ]
+        },
+        computed: {
+            checkAll: {
+                get() {
+                    return this.todos.every(item => item.isSelected);
+                },
+                set(val) {
+                    this.todos.forEach(item => {
+                        item.isSelected = val;
+                    });
+                }
+            },
+            getTime() {
+                return this.currentTime.getMonth() + 1 + '/' + this.currentTime.getDate() + '-' + ('0' + this.currentTime.getHours()).slice(-2) + ':' +
+                    ('0' + this.currentTime.getMinutes()).slice(-2);
+            }
+
+        },
+        methods: {
+            addUpcoming() {
+                if (this.msg.length <= 20) {
+                    this.todos.unshift({
+                        id: this.todos.length,
+                        isSelected: false,
+                        title: this.msg,
+                        time: this.getTime
+                    });
+                } else {
+                    alert('将字数控制在20字以内');
+                }
+
+                this.msg = '';
+            },
+            rmUpcoming(val) {
+                this.todos = this.todos.filter((item, index) => index != val);
+            },
+            reverseCheck() {
+                if (this.reverseCheckP) {
+                    this.todos.forEach(item => {
+                        item.isSelected = !item.isSelected;
+                    })
+                }
+            }
+        },
+        watch: {
+            msg(newVal, oldVal) {
+                this.tip = 'thinking......';
+                setTimeout(() => {
+                    if (newVal.length > 20) {
+                        return this.tip = '简略书写哦',
+                            this.spanActived = true;
+
+                    } else {
+                        return this.tip = '慢慢写,不着急',
+                            this.spanActived = false;
+
+                    }
+                }, 500);
+
+            }
+
+
+        }
+    });
+</script>
+
+</html>
