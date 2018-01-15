@@ -43,18 +43,27 @@
             margin-right: 10px;
         }
         
+        .list-group .list-content {
+            display: inline-block;
+            width: 100%;
+        }
+        
         .list-group label {
             font-weight: 400;
             color: #999;
             margin-bottom: 0;
         }
         
-        .list-group-item span {
-            margin-right: 15px;
+        .list-group label.complete {
+            text-decoration: line-through;
         }
         
         .list-group input {
             margin-right: 10px;
+        }
+        
+        .list-group-item span {
+            margin-right: 15px;
         }
         
         .panel-footer .undone {
@@ -102,7 +111,20 @@ todoList
                                           </label>
                         </div>
                         <ul class="list-group clearfix">
-                            <li class="list-group-item" v-for="(todo,index) in todos" :key="index"><label><input type="checkbox" v-model="todo.isSelected">{{todo.title}}</label><button class="btn pull-right btn-danger btn-xs" @click="rmUpcoming(index)">✘</button><span class="pull-right">{{todo.time}}</span></li>
+                            <li class="list-group-item" v-for="(todo,index) in todos" :key="index">
+                                <div class="list-content" v-show="cur!=todo" @dblclick="changeShow(todo)">
+                                    <label :class="{complete:todo.isSelected}">
+                                                <input type="checkbox" v-model="todo.isSelected">{{todo.title}}
+                                            </label>
+                                    <button class="btn pull-right btn-danger btn-xs" @click="rmUpcoming(index)">✘</button>
+                                    <span class="pull-right">{{todo.time}}</span>
+                                </div>
+
+                                <div class="input-group" v-show="cur==todo">
+                                    <input v-model="todo.title" @keyup.enter="modify(todo.title)" @blur="modify(todo.title)" v-focus="cur==todo" type="text" class="form-control" placeholder="修改完成回车" aria-describedby="basic-addon2">
+                                    <span class="input-group-addon" :class="{danger:spanActived}" id="basic-addon2">修改完回车提交</span>
+                                </div>
+                            </li>
 
                         </ul>
                     </div>
@@ -123,6 +145,8 @@ todoList
     let vm = new Vue({
         el: '#app',
         data: {
+            oldValue: '',
+            cur: '',
             currentTime: new Date(),
             reverseCheckP: false,
             spanActived: false,
@@ -142,6 +166,16 @@ todoList
 
             ]
         },
+        directives: {
+            focus(el, bindings) {
+                if (bindings.value) {
+                    el.focus();
+                }
+            }
+        },
+        created() {
+            this.todos = JSON.parse(localStorage.getItem('data')) || this.todos;
+        },
         computed: {
             checkAll: {
                 get() {
@@ -159,6 +193,7 @@ todoList
             }
 
         },
+
         methods: {
             addUpcoming() {
                 if (this.msg.length <= 20) {
@@ -183,9 +218,24 @@ todoList
                         item.isSelected = !item.isSelected;
                     })
                 }
+            },
+            changeShow(val) {
+                this.cur = val;
+            },
+            modify(param) {
+                this.cur.title = param;
+                this.cur = '';
             }
+
         },
         watch: {
+            todos: {
+                handler() {
+                    localStorage.setItem('data', JSON.stringify(this.todos));
+                },
+                deep: true
+
+            },
             msg(newVal, oldVal) {
                 this.tip = 'thinking......';
                 setTimeout(() => {
@@ -201,6 +251,7 @@ todoList
                 }, 500);
 
             }
+
 
 
         }
