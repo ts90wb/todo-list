@@ -96,7 +96,7 @@ todoList
             <div class="row">
                 <div class="panel panel-default col-md-6 col-md-offset-3">
                     <div class="panel-heading ">
-                        <h4 class="text-danger">亲,你有{{todos.length}}件事待办</h4>
+                        <h4 class="text-danger">亲,你有{{unfinishedCount}}件事待办</h4>
                         <ul class="nav nav-pills">
                             <li role="presentation" :class="{active:hash=='all'}"><a href="#/all">待办事件</a></li>
                             <li role="presentation" :class="{active:hash=='finished'}"><a href="#/finished">已完成</a></li>
@@ -200,6 +200,9 @@ todoList
                     return this.todos.filter(item => !item.isSelected);
                 };
                 return this.todos;
+            },
+            unfinishedCount() {
+                return this.todos.filter(item => !item.isSelected).length;
             },
             checkAll: {
                 get() {
