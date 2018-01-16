@@ -50,16 +50,24 @@
         
         .list-group label {
             font-weight: 400;
-            color: #999;
+            color: #555;
             margin-bottom: 0;
         }
         
         .list-group label.complete {
             text-decoration: line-through;
+            color: #999;
         }
         
         .list-group input {
             margin-right: 10px;
+        }
+        
+        .panel-body p.text-tip {
+            height: 40px;
+            font-size: 14px;
+            color: #999;
+            text-align: center;
         }
         
         .list-group-item span {
@@ -90,9 +98,9 @@ todoList
                     <div class="panel-heading ">
                         <h4 class="text-danger">亲,你有{{todos.length}}件事待办</h4>
                         <ul class="nav nav-pills">
-                            <li role="presentation" class="active"><a href="#">待办事件</a></li>
-                            <li role="presentation"><a href="#">已完成</a></li>
-                            <li role="presentation"><a href="#">未完成</a></li>
+                            <li role="presentation" :class="{active:hash=='all'}"><a href="#/all">待办事件</a></li>
+                            <li role="presentation" :class="{active:hash=='finished'}"><a href="#/finished">已完成</a></li>
+                            <li role="presentation" :class="{active:hash=='unfinished'}"><a href="#/unfinished">未完成</a></li>
                         </ul>
                         <div class="input-group">
                             <input v-model="msg" @keyup.enter="addUpcoming" type="text" class="form-control" placeholder="请添加代办事" aria-describedby="basic-addon2">
@@ -100,7 +108,7 @@ todoList
                         </div>
                     </div>
                     <div class="panel-body">
-                        <div class="checkbox">
+                        <div class="checkbox" v-show="filterTodos.length">
                             <label>
                                       <input type="checkbox" v-model="checkAll">
                                 全选
@@ -111,7 +119,7 @@ todoList
                                           </label>
                         </div>
                         <ul class="list-group clearfix">
-                            <li class="list-group-item" v-for="(todo,index) in todos" :key="index">
+                            <li class="list-group-item" v-for="(todo,index) in filterTodos" :key="index">
                                 <div class="list-content" v-show="cur!=todo" @dblclick="changeShow(todo)">
                                     <label :class="{complete:todo.isSelected}">
                                                 <input type="checkbox" v-model="todo.isSelected">{{todo.title}}
@@ -127,10 +135,9 @@ todoList
                             </li>
 
                         </ul>
+                        <p class="text-tip" v-show="!filterTodos.length">没有数据</p>
                     </div>
                     <div class="panel-footer clearfix">
-                        <button class="btn btn-success pull-right">加入已完成</button>
-                        <button class="btn btn-warning pull-right undone">加入未完成</button>
                     </div>
                 </div>
             </div>
@@ -145,6 +152,7 @@ todoList
     let vm = new Vue({
         el: '#app',
         data: {
+            hash: '',
             oldValue: '',
             cur: '',
             currentTime: new Date(),
@@ -175,8 +183,24 @@ todoList
         },
         created() {
             this.todos = JSON.parse(localStorage.getItem('data')) || this.todos;
+            this.hash = window.location.hash.slice(2) || 'all';
+            window.addEventListener('hashchange', () => {
+                this.hash = window.location.hash.slice(2);
+            }, false);
         },
         computed: {
+            filterTodos() {
+                if (this.hash == 'all') {
+                    return this.todos;
+                };
+                if (this.hash == 'finished') {
+                    return this.todos.filter(item => item.isSelected);
+                };
+                if (this.hash == 'unfinished') {
+                    return this.todos.filter(item => !item.isSelected);
+                };
+                return this.todos;
+            },
             checkAll: {
                 get() {
                     return this.todos.every(item => item.isSelected);
